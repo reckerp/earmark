@@ -28,7 +28,6 @@ export const addAudiobook = async (prevState: FormState, input: FormData) => {
     }
 
     if (session.user.token_expiry < Math.floor(Date.now() / 1000)) {
-        console.log('Token expired');
         const [accessToken, refreshToken] = await refreshAccessToken(session.user.refresh_token);
         if (!accessToken || !refreshToken) {
             return { message: 'Failed to refresh token', type: 'error' }
@@ -37,8 +36,6 @@ export const addAudiobook = async (prevState: FormState, input: FormData) => {
         session.user.refresh_token = refreshToken;
         session.user.token_expiry = new Date().getUTCMilliseconds() + 3600;
 
-    } else {
-        console.log('Token valid');
     }
 
     try {
@@ -148,7 +145,6 @@ const refreshAccessToken = async (refreshToken: string) => {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
     const authEncoded = Buffer.from(clientId + ':' + clientSecret).toString('base64');
-    console.log(`AUTH: ${authEncoded}`);
 
     const headers = new Headers();
     headers.append("Content-Type", "application/x-www-form-urlencoded");
@@ -165,7 +161,6 @@ const refreshAccessToken = async (refreshToken: string) => {
     };
 
     const response = await fetch("https://accounts.spotify.com/api/token", requestOptions);
-    console.log(response);
     if (!response.ok) {
         throw new Error('Failed to refresh token');
     }
