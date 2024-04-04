@@ -4,4 +4,7 @@
 
 body {
 	margin: 0.75rem;
+    min-height: 100vh;  /* Set minimum height to viewport height */
+    display: flex;
+    flex-direction: column;
 }

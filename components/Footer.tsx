@@ -6,7 +6,7 @@ import { FaGithub } from "react-icons/fa";
 
 const Footer = () => {
     return (
-        <footer className="footer footer-center p-10 text-primary-content">
+        <footer className="footer footer-center p-10 text-primary-content mt-auto">
             <aside>
                 <Image src="https://www.recker.io/_next/static/media/r-black.daaf3663.svg" alt="logo" width={50} height={50} />
                 <p className="font-bold">
