@@ -28,6 +28,7 @@ model marks {
   author    String
   cover_url  String
   spotify_url String
+  spotify_uri String
   track_no  String?
   last_listen DateTime? 
   user      users     @relation(fields: [userId], references: [id])
