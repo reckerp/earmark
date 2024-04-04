@@ -2,13 +2,14 @@ import { auth, signIn, signOut } from '@/auth';
 import React from 'react'
 import { LuLogIn } from "react-icons/lu";
 import { FiUser } from "react-icons/fi";
+import Link from "next/link";
 
 const Navbar = async () => {
     const session = await auth();
     return (
         <nav className="navbar bg-primary text-primary-content rounded-xl flex justify-between">
             <div className="flex-1">
-                <a className="btn btn-ghost text-xl">EarMark</a>
+                <Link href="/" className="btn btn-ghost text-xl">EarMark</Link>
             </div>
             <div className="flex-none">
                 {session ?
