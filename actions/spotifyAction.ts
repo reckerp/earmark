@@ -23,8 +23,22 @@ export const addAudiobook = async (prevState: FormState, input: FormData) => {
     });
 
     const session = await auth();
-    if (!session || !session.user.access_token || !session.user.email) {
+    if (!session || !session.user.access_token || !session.user.email || !session.user.refresh_token || !session.user.token_expiry) {
         return { message: 'Please sign in to add an audiobook', type: 'error' }
+    }
+
+    if (session.user.token_expiry < Math.floor(Date.now() / 1000)) {
+        console.log('Token expired');
+        const [accessToken, refreshToken] = await refreshAccessToken(session.user.refresh_token);
+        if (!accessToken || !refreshToken) {
+            return { message: 'Failed to refresh token', type: 'error' }
+        }
+        session.user.access_token = accessToken;
+        session.user.refresh_token = refreshToken;
+        session.user.token_expiry = new Date().getUTCMilliseconds() + 3600;
+
+    } else {
+        console.log('Token valid');
     }
 
     try {
@@ -33,9 +47,9 @@ export const addAudiobook = async (prevState: FormState, input: FormData) => {
         });
 
         const trackId = parseTrackId(data.share_url);
-        const mark = await lookupTrack(trackId, session.user.access_token);
+        const mark = await lookupTrack(trackId, session.user.access_token as string);
         if (await updateMarkIfExist(mark, session.user.email)) {
-            return { message: 'Last playtime updated', type: 'success' }
+            return { message: `Last playtime of ${mark.title} updated`, type: 'success' }
         }
         await addMark(mark, session.user.email);
 
@@ -73,7 +87,6 @@ const lookupTrack = async (trackId: string, accessToken: string) => {
 
     const response = await fetch(SPOTIFY_API + "tracks/" + trackId, requestOptions);
     const result = await response.json();
-    console.log(result);
 
     const mark: SpotifyMark = {
         title: result.album.name as string,
@@ -129,4 +142,34 @@ const updateMarkIfExist = async (mark: SpotifyMark, userEmail: string) => {
     } else {
         return false;
     }
+}
+
+const refreshAccessToken = async (refreshToken: string) => {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    const authEncoded = Buffer.from(clientId + ':' + clientSecret).toString('base64');
+    console.log(`AUTH: ${authEncoded}`);
+
+    const headers = new Headers();
+    headers.append("Content-Type", "application/x-www-form-urlencoded");
+    headers.append("Authorization", `Basic ${authEncoded}`);
+
+    const urlencoded = new URLSearchParams();
+    urlencoded.append("grant_type", "refresh_token");
+    urlencoded.append("refresh_token", refreshToken);
+
+    const requestOptions: RequestInit = {
+        method: "POST",
+        headers: headers,
+        body: urlencoded.toString(),
+    };
+
+    const response = await fetch("https://accounts.spotify.com/api/token", requestOptions);
+    console.log(response);
+    if (!response.ok) {
+        throw new Error('Failed to refresh token');
+    }
+    const result = await response.json();
+
+    return [result.access_token, result.refresh_token];
 }
