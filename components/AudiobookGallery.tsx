@@ -4,7 +4,9 @@ import prisma from '@/prisma/connection'
 import { Mark } from "@/types/Mark";
 import Link from "next/link";
 import { FiShare } from "react-icons/fi";
+import { BiTrash } from "react-icons/bi";
 import React from 'react'
+import { revalidatePath } from "next/cache";
 
 
 const AudiobookGallery = async () => {
@@ -32,10 +34,25 @@ const AudiobookGallery = async () => {
                             <figure><img src={mark.cover_url} alt="Cover Picture" /></figure>
                             <div className="card-body">
                                 <h2 className="card-title">{mark.title}</h2>
-                                <p className='mb-0'><b>{mark.author}</b><br />{mark.last_listen?.toDateString()}</p>
-                                <div className="card-actions justify-end">
-                                    <Link className='btn btn-ghost btn-xs' target="_blank" href={mark.spotify_url}><FiShare className="w-4 h-4" /></Link>
-                                    <Link className='btn btn-xs' href={mark.spotify_uri}>Listen Now</Link>
+                                <p><b>{mark.author}</b><br />{mark.last_listen?.toDateString()}</p>
+                                <div className="card-actions items-center flex-row justify-between">
+                                    <form className="" action={async () => {
+                                        "use server";
+                                        await prisma.marks.delete({
+                                            where: {
+                                                id: mark.id,
+                                            },
+                                        });
+                                        revalidatePath('/');
+                                    }}>
+                                        <button className="btn btn-ghost btn-xs" type="submit">
+                                            <BiTrash className="w-4 h-4" />
+                                        </button>
+                                    </form>
+                                    <div className="card-actions">
+                                        <Link className='btn btn-ghost btn-xs' target="_blank" href={mark.spotify_url}><FiShare className="w-4 h-4" /></Link>
+                                        <Link className='btn btn-xs' href={mark.spotify_uri}>Listen Now</Link>
+                                    </div>
                                 </div>
                             </div>
                         </div>
